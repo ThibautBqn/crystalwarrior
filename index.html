@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Canvas tutorial</title>
+    <script type="text/javascript" src="src/test.js"></script>
+    <script type="text/javascript" src="carte5cw.js"></script>
+    <script type="text/javascript" src="characters.js"></script>
+    <script type="text/javascript" src="src/classes/Movable.js"></script>
+    <script type="text/javascript" src="src/classes/Drawable.js"></script>
+    <script type="text/javascript" src="src/classes/Tile.js"></script>
+    <script type="text/javascript" src="src/classes/Animation.js"></script>
+    <script type="text/javascript" src="src/classes/Background.js"></script>
+    <script type="text/javascript" src="src/classes/Character.js"></script>
+    <script type="text/javascript" src="src/classes/Cursor.js"></script>
+    <script type="text/javascript" src="src/classes/MainController.js"></script>
+    <script type="text/javascript" src="src/classes/Battle.js"></script>
+    <script type="text/javascript" src="src/classes/Ia.js"></script>
+    <script type="text/javascript" src="src/KeyBinding.js"></script>
+    <script type="text/javascript">
+      function dedupe(arr) {
+        return arr.reduce(function (p, c) {
+          var id = [c.x, c.y].join('|');
+          if (p.temp.indexOf(id) === -1) {
+            p.out.push(c);
+            p.temp.push(id);
+          }
+          return p;
+        }, { temp: [], out: [] }).out;
+      }
+
+      function logger(mgs) {
+        console.log(mgs)
+      }
+
+      const glob = {
+        logger: true,
+        maps: null,
+        currentMap: [],
+        characters: [],
+        charactersPosition: [],
+        playerChar: [],
+        pcChar: [],
+        tiles: {},
+        phase: 'init',
+        round: 0,
+        fps: 0,
+        size: 64,
+        ratio: 1,
+        secondsPassed: 0,
+        cursor: new Cursor(),
+        background: new Background(),
+        ia: new Ia(),
+        mainController: null,
+        playerEndTour: function() {
+          glob.playerChar.forEach(item => {
+            item.moved = true
+          })
+        },
+        playerMovedAll: function() {
+          for(let i = 0 ; i < this.playerChar.length ; i++) {
+            if (!this.playerChar[i].moved) {return false;}
+          }
+          return true;
+        },
+        resetPlayerChar: function() {
+          this.playerChar.forEach(character => {
+            character.moved = false
+          })
+        },
+        setMainController() {
+          this.mainController = new MainController(this.cursor, this.background)
+        }
+      }
+
+      function initTiles() {
+        return new Promise((resolve, reject) => {
+          let img = new Image();
+          img.onload = function() {
+            for (let y = 0 ; y < (data.tilesets[0].tilecount / data.tilesets[0].columns) ; y++) {
+              for (let x = 0 ; x < data.tilesets[0].columns ; x++) {
+                glob.tiles[x + y*data.tilesets[0].columns] = new Tile(x + y*data.tilesets[0].columns, img)
+                if (y == (data.tilesets[0].tilecount / data.tilesets[0].columns) - 1 && x == data.tilesets[0].columns - 1)
+                  resolve()
+              }
+            }
+          }
+          img.src = 'sprites/all2.png';  
+        })
+      }
+
+      async function setAnimatedTiles() {
+        return new Promise((resolve, reject) => {
+          data.tilesets[0].tiles.forEach((tile, index) => {
+            glob.tiles[tile.id].animation = new Animation(tile.animation)
+            if (index == data.tilesets[0].tiles.length - 1)
+              resolve()
+          })  
+        })
+      }
+
+      async function initCharacters() {
+        return new Promise((resolve, reject) => {
+          glob.charactersPosition = data.characters
+          for(let y = 0 ; y < data.height ; y++) {
+            for(let x = 0 ; x < data.width ; x++) {
+              if (data.characters[y][x]) {
+                let character = new Character(data.characters[y][x], {x, y}, characters[data.characters[y][x] - 1])
+                character.limit = {x: data.width - 1, y: data.height - 1}
+                glob.characters.push(character)
+                glob.charactersPosition[y][x] = character
+                if (character.owner == "player") {character.know = true;glob.playerChar.push(character)}
+                else {glob.pcChar.push(character)}
+                character.setKnowledge(true)
+              }
+              if (y == data.height - 1 && x == data.width - 1)
+                resolve()
+            }
+          }
+        })
+      }
+
+      async function initCharactersSides() {
+        return new Promise((resolve, reject) => {
+          glob.characters.forEach((character, index) => {
+            character.updateSides()
+            if(index == glob.characters.length - 1) {resolve()}
+          })
+        })
+      }
+
+      async function drawCharacters() {
+        return new Promise((resolve, reject) => {
+          var canvas = document.getElementById('game-layer');
+          if (canvas.getContext) {
+            var ctx = canvas.getContext('2d');
+          }
+          ctx.clearRect(0, 0, 576, 576)
+          ctx.imageSmoothingEnabled = false;
+          glob.characters.forEach((character, index) => {
+            character.draw(ctx)
+            if (index == glob.characters.length - 1)
+              resolve()
+          })  
+        })
+      }
+
+      async function init() {
+        console.log('Game initialysing...')
+        await initTiles()
+        await setAnimatedTiles()
+        glob.background.limit = {x: data.width - 9, y: data.height - 9}
+        glob.setMainController()
+        console.log('loading data')
+        console.log('loading sprites')
+        await initCharacters()
+        await initCharactersSides()
+        glob.ia.initCharacters(glob.pcChar, glob.playerChar.sort((a,b) => {
+          return a.id == b.id ? 0 : a.id < b.id ? -1 : 1
+        }))
+        console.log(glob.characters)
+        console.log('loading keybinding')
+        keyBinding()
+        console.log('Game loaded')
+        glob.phase = 'tactical'
+        console.log('Game lunched')
+        window.requestAnimationFrame(main)
+      }
+
+      function main(now) {
+        glob.time = now
+        glob.fps++
+        if (glob.fps == 60) {
+          glob.secondsPassed++
+          if (glob.secondsPassed == 5) logger = undefined;
+          // glob.secondsPassed % 2 ? console.log("tic") : console.log("tac")
+          glob.fps = 0
+        }
+        if (glob.phase == 'fight') {
+          fight(glob.cursor.selected, glob.charactersPosition[glob.cursor.position.y + glob.background.position.y][glob.cursor.position.x + glob.background.position.x])
+          return window.requestAnimationFrame(main)
+        }
+        if (glob.phase == 'tactical') {
+          tactical()
+          return window.requestAnimationFrame(main)
+        }
+        window.requestAnimationFrame(main)
+      }
+
+      async function tactical() {
+        await glob.background.draw()
+        await glob.cursor.draw()
+        await drawCharacters()
+        if (glob.playerMovedAll()) {
+          glob.ia.play()
+          console.log(glob.ia.characters)
+          glob.resetPlayerChar()
+          console.log("Nouveau tour pour le joueur")
+        }
+      }
+
+      async function fight(player, pc) {
+        const battle = new Battle();
+        document.getElementById("battle-layer").style.display = "block"
+        await battle.draw()
+        if (window.confirm("fin de la battle")) {
+            document.getElementById("battle-layer").style.display = "none"
+            console.log(document.getElementById("battle-layer").style.display)
+            glob.phase = "tactical"
+        }
+        
+      }
+    </script>
+    </script>
+    <style type="text/css">
+#stage                  { position: relative; }
+canvas                  { position: absolute; }
+#ui-layer               { z-index: 100; }
+#battle-layer           { z-index: 101; }
+#battle-effect-layer    { z-index: 102; }
+#game-layer             { z-index: 10; }
+#foreground-layer       { z-index: 3; }
+#mediumground-layer     { z-index: 2; }
+#background-layer       { z-index: 1; }
+    </style>
+  </head>
+  <body onload="init();" style="overflow: hidden">
+    <div id="stage" style="">
+      <canvas id="ui-layer" width="576" height="576"></canvas>
+      <canvas id="battle-layer" width="576" height="576"></canvas>
+      <canvas id="battle-effect-layer" width="576" height="576"></canvas>
+      <canvas id="game-layer" width="576" height="576"></canvas>
+      <canvas id="foreground-layer" width="576" height="576"></canvas>
+      <canvas id="mediumground-layer" width="576" height="576"></canvas>
+      <canvas id="background-layer" width="576" height="576"></canvas>
+    </div>
+  </body>
+</html>

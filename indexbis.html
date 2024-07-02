@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Canvas tutorial</title>
+    <script type="text/javascript" src="maps.js"></script>
+    <script type="text/javascript">
+      function dedupe(arr) {
+        return arr.reduce(function (p, c) {
+
+          //create an identifying id from the object values
+          var id = [c.x, c.y].join('|');
+
+          //if the id is not found in the temp array
+          //add the object to the output array
+          //and add the key to the temp array
+          if (p.temp.indexOf(id) === -1) {
+            p.out.push(c);
+            p.temp.push(id);
+          }
+          return p;
+
+        //return the deduped array
+        }, { temp: [], out: [] }).out;
+      }
+
+   	  class drawable {
+   	  	constructor(ctx) {
+   	  		this.ctx = ctx
+   	  	}
+   	  	draw() {
+   	  		console.error('This method must be overwritted')
+   	  	}
+   	  }
+
+      class Caracter {
+        constructor(name, position, owner) {
+          this.name = name
+          this.owner = owner
+          this.position = position ? JSON.parse(JSON.stringify(position)) : {x:2, y:4};
+          // this.initPosition = {x: 2, y:4}
+          this.initPosition = position ? JSON.parse(JSON.stringify(position)) : {x:2, y:4};
+          this.mouvement = 5
+          this.played = false
+          this.mouvementSpent = {
+            "A": 1,
+            "B": 1,
+            "C": 1,
+            "D": 3,
+            "E": 10,
+            "F": 2,
+            "G": 2,
+            "L": 2,
+            "M": 10,
+            "N": 10,
+            "P": 1,
+            "R": 1,
+            "S": 2,
+            "T": 2,
+            "V": 10,
+            "W": 10,
+            "X": 10,
+            "Y": 10,
+            "Z": 1
+          }
+          this.accessibleLocation = []
+        }
+        isAccessible(position) {
+          for(let i = 0 ; i < this.accessibleLocation.length ; i++) {
+            if (this.accessibleLocation[i].x == position.x && this.accessibleLocation[i].y == position.y) return true;
+          }
+          return false;
+        }
+        draw(ctx) {
+          let img = new Image()
+          img.onload = () => {
+            ctx.drawImage(img, 40*4, 40*4, 16*4, 16*4, this.position.x*64+origin.x, this.position.y*64+origin.y, 16*4, 16*4);
+          }
+          img.src = 'sprites/inconnu.png';
+        }
+        goLeft() {
+          let canMove = this.isAccessible({x: this.position.x - 1, y: this.position.y})
+          if (canMove) this.position.x--;
+          return canMove
+        }
+        goRight() {
+          let canMove = this.isAccessible({x: this.position.x + 1, y: this.position.y})
+          if (canMove) this.position.x++;
+          return canMove
+        }
+        goUp() {
+          let canMove = this.isAccessible({x: this.position.x, y: this.position.y - 1})
+          if (canMove) this.position.y--;
+          return canMove
+        }
+        goDown() {
+          let canMove = this.isAccessible({x: this.position.x, y: this.position.y + 1})
+          if (canMove) this.position.y++;
+          return canMove
+        }
+        setAccessibleLocation() {
+          this.accessibleLocation = []
+          this.mouvementLeft = this.mouvement
+          this.tryLocation(this.position, this.mouvement)
+          this.accessibleLocation = dedupe(this.accessibleLocation)
+        }
+        tryLocation(position, mouvementLeft) {
+          let right = position.x < maps.rounds[round][0].length - 1 ? maps.charactersPlace[round][position.y][position.x+1] : null
+          let left = position.x > 0 ? maps.charactersPlace[round][position.y][position.x-1] : null
+          let down = position.y < maps.rounds[round].length - 1 ? maps.charactersPlace[round][position.y+1][position.x] : null
+          let up = position.y > 0 ? maps.charactersPlace[round][position.y-1][position.x] : null
+          this.accessibleLocation.push({x: position.x, y: position.y})
+          if(mouvementLeft == 0) return;
+          if(position.x < maps.rounds[round][0].length - 1 && this.mouvementSpent[maps.rounds[round][position.y][position.x+1]] <= mouvementLeft && (!right || right.owner == this.owner)) {
+            this.tryLocation({x: position.x + 1, y: position.y}, mouvementLeft - this.mouvementSpent[maps.rounds[round][position.y][position.x+1]])
+          }
+          if(position.x > 0 && this.mouvementSpent[maps.rounds[round][position.y][position.x-1]] <= mouvementLeft && (!left || left.owner == this.owner)) {
+            this.tryLocation({x: position.x - 1, y: position.y}, mouvementLeft - this.mouvementSpent[maps.rounds[round][position.y][position.x-1]])
+          }
+          if(position.y < maps.rounds[round].length - 1 && this.mouvementSpent[maps.rounds[round][position.y+1][position.x]] <= mouvementLeft && (!down || down.owner == this.owner)) {
+            this.tryLocation({x: position.x, y: position.y + 1}, mouvementLeft - this.mouvementSpent[maps.rounds[round][position.y+1][position.x]])
+          }
+          if(position.y > 0 && this.mouvementSpent[maps.rounds[round][position.y-1][position.x]] <= mouvementLeft && (!up || up.owner == this.owner)) {
+            this.tryLocation({x: position.x, y: position.y - 1}, mouvementLeft - this.mouvementSpent[maps.rounds[round][position.y-1][position.x]])
+          }
+          return
+        }
+      }
+      let origin = {
+        x: 0,
+        y: 0,
+        decalLeft: function() {
+          this.x -= 64
+        },
+        decalRight: function() {
+          this.x += 64
+        },
+        decalUp: function() {
+          this.y -= 64
+        },
+        decalDown: function() {
+          this.y += 64
+        },
+        canDecalLeft: function() {
+          return Math.abs(this.x) != maps.rounds[round][0].length*64 - 9*64
+        },
+        canDecalRigth: function() {
+          return this.x != 0
+        },
+        canDecalUp: function() {
+          return Math.abs(this.y) != maps.rounds[round].length*64 - 9*64
+        },
+        canDecalDown: function() {
+          return this.y != 0
+        },
+        savePosition: function() {
+          this.savedPosition = {x: this.x, y: this.y}
+        },
+        restorePosition: function() {
+          this.x = this.savedPosition.x
+          this.y = this.savedPosition.y
+        }
+      }
+      let cursor = {
+        x: 0,
+        y: 0,
+        selected: undefined,
+        draw: function (ctx) {
+          if (this.selected) {
+            let tmp = []
+            for(let y=0;y<maps.rounds[round].length;y++) {
+              tmp[y]=[]
+              for(let x=0;x<maps.rounds[round][y].length;x++) {
+                tmp[y][x] = false
+              }
+            }
+            this.selected.accessibleLocation.forEach(function(item) {
+              tmp[item.y][item.x] = true
+            })
+            for(let y=0;y<tmp.length;y++) {
+              for(let x=0;x<tmp[y].length;x++) {
+                if(!tmp[y][x]) {
+                  ctx.globalAlpha = 0.5
+                  ctx.strokeStyle = 'rgb(0,0,0)';
+                  ctx.fillRect(x*64+origin.x, y*64+origin.y, 64, 64);
+                }
+              }
+            }
+          } else {
+            ctx.globalAlpha = 0.7
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = turn == "C" ? 'rgb(255,255,255)' : 'rgb(255,75,75)';
+            ctx.strokeRect(this.x+1, this.y+1, 63, 63);
+          }
+          
+        },
+        decalLeft: function() {
+          if (this.x == 0) return;
+          this.x -= 64
+        },
+        decalRight: function() {
+          if (this.x == 512) return;
+          this.x += 64
+        },
+        decalUp: function() {
+          if (this.y == 512) return;
+          this.y += 64
+        },
+        decalDown: function() {
+          if (this.y == 0) return;
+          this.y -= 64
+        },
+        savePosition: function() {
+          this.savedPosition = {x: this.x, y: this.y}
+        },
+        restorePosition: function() {
+          this.x = this.savedPosition.x
+          this.y = this.savedPosition.y
+        }
+      }
+      function landModifer(i,j) {
+        let count = 0
+        const lands = [
+          ((i > 0 && j > 0 && maps.rounds[round][i-1][j-1] != "W") ? true : false),
+          ((j > 0 && maps.rounds[round][i][j-1] != "W") ? true : false),
+          ((i < maps.rounds[round].length - 1 && j > 0 && maps.rounds[round][i+1][j-1] != "W") ? true : false),
+          ((i > 0 && maps.rounds[round][i-1][j] != "W") ? true : false),
+          ((i < maps.rounds[round].length - 1 && maps.rounds[round][i+1][j] != "W") ? true : false),
+          ((i > 0 && j < maps.rounds[round][i].length -1 && maps.rounds[round][i-1][j+1] != "W") ? true : false),
+          ((j < maps.rounds[round][i].length -1 && maps.rounds[round][i][j+1] != "W") ? true : false),
+          ((i < maps.rounds[round].length - 1 && j < maps.rounds[round][i].length -1 && maps.rounds[round][i+1][j+1] != "W") ? true : false)
+        ]
+        lands.forEach(item => {
+          if (item)
+            count++
+        })
+
+        if (count == 0) return 0;
+        if (count == 1) {
+          if (lands[0]) return 1;
+          if (lands[5]) return 2;
+          if (lands[2]) return 3;
+          if (lands[7]) return 4;
+        }
+        if (count >= 3) {
+          if (lands[0] && lands[1] && lands[3]) return 9;
+          if (lands[3] && lands[5] && lands[6]) return 10;
+          if (lands[1] && lands[2] && lands[4]) return 11;
+          if (lands[4] && lands[6] && lands[7]) return 12;
+        }
+        if (lands[3]) return 5;
+        if (lands[1]) return 6;
+        if (lands[6]) return 7;
+        if (lands[4]) return 8;
+      }
+      function drawCastel(ctx, img, castelCoordinate) {
+        let x = maps.coordinate.C.x
+        let y = maps.coordinate.C.y
+        y+= 40 * Math.floor((countFrame < 30 ? countFrame : countFrame-30) / 10)
+        let w = maps.coordinate.C.w
+        let h = maps.coordinate.C.h
+        let ic = castelCoordinate.castel.i
+        let jc = castelCoordinate.castel.j
+        let ie = castelCoordinate.enemyCastel.i
+        let je = castelCoordinate.enemyCastel.j
+        ctx.drawImage(img, x, y, w, h, jc*64+origin.x, ic*64+origin.y, w*4, h*4);
+        ctx.drawImage(img, x, y, w, h, je*64+origin.x, ie*64+origin.y, w*4, h*4);
+      }
+      function drawMontaign(ctx, img, montaigns) {
+        let x = maps.coordinate.N.x
+        let y = maps.coordinate.N.y
+        let w = maps.coordinate.N.w
+        let h = maps.coordinate.N.h
+        montaigns.forEach(montaign => {
+          let i = montaign.i
+          let j = montaign.j
+          ctx.drawImage(img, x, y, w, h, j*64+origin.x, i*64+origin.y, w*4, h*4);
+        })
+      }
+      function drawMap(ctx, round) {
+        let castelCoordinate = {
+          castel: undefined,
+          enemyCastel: undefined
+        }
+        let montaigns = []
+        let img = new Image();
+        img.onload = function() {
+          for(let i = 0 ; i < maps.rounds[round].length ; i++) {
+            for(let j = 0 ; j < maps.rounds[round][i].length ; j++) {
+              if (maps.rounds[round][i][j] == "C" && castelCoordinate.castel == undefined) {
+                castelCoordinate.castel = {i,j}
+                continue;
+              }
+              if (maps.rounds[round][i][j] == "Z" && castelCoordinate.enemyCastel == undefined) {
+                castelCoordinate.enemyCastel = {i,j}
+                continue;
+              }
+              if (maps.rounds[round][i][j] == "Z" || maps.rounds[round][i][j] == "C") {
+                continue;
+              }
+              if (maps.rounds[round][i][j] == "N") {
+                montaigns.push({i,j});
+                continue;
+              }
+              
+              let x = maps.coordinate[maps.rounds[round][i][j]].x
+              let modifer = landModifer(i,j);
+              if (maps.rounds[round][i][j] == "W") {
+                x += 24*modifer;
+              }
+              let y = maps.coordinate[maps.rounds[round][i][j]].y
+              if (maps.rounds[round][i][j] == "W") {
+                y+= 136 * Math.floor(countFrame / 15)
+                if (modifer != 0) {
+                  y+= 24 * Math.floor((countFrame + 60*(countSecond % 2)) / 24)
+                }
+              }
+              if (maps.rounds[round][i][j] == "F" && !(Math.floor(countSecond) % 5)) {
+                y+= 24 * Math.floor(countFrame / 10)
+              }
+              let w = maps.coordinate[maps.rounds[round][i][j]].w
+              let h = maps.coordinate[maps.rounds[round][i][j]].h
+              ctx.drawImage(img, x, y, w, h, j*64+origin.x, i*64+origin.y, w*4, h*4);
+              
+            }
+          }
+          drawCastel(ctx, img, castelCoordinate)
+          drawMontaign(ctx, img, montaigns)
+        };
+        img.src = 'sprites/Tileset-t.png';
+      }
+      function clearCanvas () {
+      	var canvas = document.getElementById('tutorial');
+        if (canvas.getContext) {
+          var ctx = canvas.getContext('2d');
+        }
+        var canvas2 = document.getElementById('game-layer');
+        if (canvas2.getContext) {
+          var ctx2 = canvas2.getContext('2d');
+        }
+        var canvas3 = document.getElementById('ui-layer');
+        if (canvas3.getContext) {
+          var ctx3 = canvas3.getContext('2d');
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
+      }
+      function draw() {
+        var canvas = document.getElementById('tutorial');
+        if (canvas.getContext) {
+          var ctx = canvas.getContext('2d');
+        }
+        var canvas2 = document.getElementById('game-layer');
+        if (canvas2.getContext) {
+          var ctx2 = canvas2.getContext('2d');
+        }
+        var canvas3 = document.getElementById('ui-layer');
+        if (canvas3.getContext) {
+          var ctx3 = canvas3.getContext('2d');
+        }
+        ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
+        ctx.imageSmoothingEnabled = false;
+        ctx2.imageSmoothingEnabled = false;
+        ctx3.imageSmoothingEnabled = false;
+        drawMap(ctx, round);
+        cursor.draw(ctx3)
+        let img = new Image()
+          img.onload = () => {
+            ctx2.clearRect(0, 0, 576, 576)
+            characters.forEach(item => {
+              ctx2.drawImage(img, 40*4, 40*4, 16*4, 16*4, item.position.x*64+origin.x, item.position.y*64+origin.y, 16*4, 16*4);
+            })
+          }
+          img.src = 'sprites/inconnu.png';
+      }
+      var round = 0
+      var lastRender = 0
+      var countFrame = 0
+      var countSecond = 0
+      var turn = "C"
+      var logger = true
+      var charMaps = maps.charactersPlace[round]
+      var characters = []
+      for (let y = 0 ; y < maps.charactersPlace[round].length ; y++) {
+        for (let x = 0 ; x < maps.charactersPlace[round][y].length ; x++) {
+          if (maps.charactersPlace[round][y][x]) {
+            maps.charactersPlace[round][y][x] = new Caracter(`${x}test${y}`, {x,y}, maps.charactersPlace[round][y][x])
+            characters.push(maps.charactersPlace[round][y][x])
+          }
+        }
+      }
+      function main(now) {
+        
+        if (lastRender != 0) {
+          logger = false
+        }
+        countFrame++
+        if (countFrame == 60) {
+          countFrame = 0
+          countSecond++
+        }
+        let delay = now - lastRender
+        draw()
+        lastRender = now
+        document.onkeydown = function (e) {
+          e = e || window.event;
+          if(e.keyCode == 38) {
+            if (origin.canDecalDown() && cursor.y == 256) {
+              origin.decalDown()
+              if(cursor.selected && cursor.selected.goDown()) origin.decalDown();
+              else if(!cursor.selected) origin.decalDown();
+            } else  {
+              if(cursor.selected && cursor.selected.goUp()) cursor.decalDown();
+              else if(!cursor.selected) cursor.decalDown()
+            }
+          }
+          if(e.keyCode == 37) {
+            if (origin.canDecalRigth() && cursor.x == 256) {
+              if(cursor.selected && cursor.selected.goLeft()) origin.decalRight();
+              else if(!cursor.selected) origin.decalRight();
+            } else  {
+              if(cursor.selected && cursor.selected.goLeft()) cursor.decalLeft();
+              else if(!cursor.selected) cursor.decalLeft();
+            }
+          }
+          if(e.keyCode == 39) {
+            if (origin.canDecalLeft() && cursor.x == 256) {
+              if(cursor.selected && cursor.selected.goRight()) origin.decalLeft();
+              else if(!cursor.selected) origin.decalLeft();
+            } else  {
+              if(cursor.selected && cursor.selected.goRight()) cursor.decalRight();
+              else if(!cursor.selected) cursor.decalRight();
+            }
+          }
+          if(e.keyCode == 40) {
+            if (origin.canDecalUp() && cursor.y == 256) {
+              if(cursor.selected && cursor.selected.goUp()) origin.decalUp();
+              else if(!cursor.selected) origin.decalUp();
+            } else  {
+              if(cursor.selected && cursor.selected.goDown()) cursor.decalUp();
+              else if(!cursor.selected) cursor.decalUp();
+            }
+          }
+          if(e.keyCode == 32) {
+            character = maps.charactersPlace[round][(cursor.y+Math.abs(origin.y))/64][(cursor.x+Math.abs(origin.x))/64]
+            if (cursor.selected && character && cursor.selected.name != character.name)
+              return
+            if (cursor.selected != undefined && !character) {
+              cursor.selected.played = true
+              maps.charactersPlace[round][cursor.selected.position.y][cursor.selected.position.x] = cursor.selected
+              cursor.selected = undefined
+              maps.charactersPlace[round][(cursor.savedPosition.y+Math.abs(origin.savedPosition.y))/64][(cursor.savedPosition.x+Math.abs(origin.savedPosition.x))/64] = null
+            }
+            if (cursor.selected != undefined && cursor.selected.name == character.name) {
+              cursor.selected.played = true
+              cursor.selected = undefined
+            }
+            if(character && !character.played && character.owner == turn) {
+              cursor.selected = character
+              cursor.savePosition()
+              origin.savePosition()
+              cursor.selected.setAccessibleLocation()
+            }
+          }
+          if(e.ctrlKey && cursor.selected) {
+            cursor.selected.position = {x: cursor.selected.initPosition.x, y: cursor.selected.initPosition.y}
+            cursor.restorePosition()
+            origin.restorePosition()
+            cursor.selected = undefined
+          }
+          if (e.keyCode == 88 && !cursor.selected) {
+            characters.forEach(item => {
+              item.played = false
+            })
+            turn = turn == "C" ? "Z" : "C"
+          }
+          if (cursor.x < 0) cursor.x = 0;
+          if (cursor.y < 0) cursor.y = 0;
+          if (cursor.x > 512) cursor.x = 512;
+          if (cursor.y > 512) cursor.y = 512;
+        };
+        window.requestAnimationFrame(main)
+      }
+
+    </script>
+    <style type="text/css">
+	  #stage {
+	    width: 576px;
+	    height: 576px;
+	    position: relative;
+	    border: 2px solid black;
+	  }
+
+	  canvas { position: absolute; }
+	  #ui-layer { z-index: 3; }
+	  #game-layer { z-index: 2; }
+	  #tutorial { z-index: 1; }
+      canvas { border: 1px solid black; }
+    </style>
+  </head>
+  <body onload="window.requestAnimationFrame(main);" style="overflow: hidden">
+    <div id="stage">
+      <canvas id="ui-layer" width="576" height="576"></canvas>
+      <canvas id="game-layer" width="576" height="576"></canvas>
+      <canvas id="tutorial" width="576" height="576"></canvas>
+    </div>
+    
+  </body>
+</html>
