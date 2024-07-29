@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Canvas tutorial</title>
+    <script type="module" src="./main-bundle.js"></script>
+    <style type="text/css">
+#stage                  { position: relative; }
+canvas                  { position: absolute; }
+#ui-layer               { z-index: 100; }
+#battle-layer           { z-index: 101; }
+#battle-effect-layer    { z-index: 102; }
+#game-layer             { z-index: 10; }
+#foreground-layer       { z-index: 3; }
+#mediumground-layer     { z-index: 2; }
+#background-layer       { z-index: 1; }
+    </style>
+  </head>
+  <body style="overflow: hidden">
+    <div id="stage">
+      <canvas id="ui-layer" width="576" height="576"></canvas>
+      <canvas id="battle-layer" width="576" height="576"></canvas>
+      <canvas id="battle-effect-layer" width="576" height="576"></canvas>
+      <canvas id="game-layer" width="576" height="576"></canvas>
+      <canvas id="foreground-layer" width="576" height="576"></canvas>
+      <canvas id="mediumground-layer" width="576" height="576"></canvas>
+      <canvas id="background-layer" width="576" height="576"></canvas>
+    </div>
+  </body>
+</html>
