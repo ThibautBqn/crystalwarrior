@@ -4,6 +4,7 @@ console.log("trying import of testor module");
 
 import { Testor } from "./testor";
 import { Glob } from "./global";
+import { GameData } from "./gameData";
 
 enum Phase {
     fight = "fight",
@@ -56,7 +57,7 @@ const glob: Global = {
         }
     }
 };
-
+let gameData: GameData;
 
 function main(now) {
     glob.time = now;
@@ -78,6 +79,13 @@ function main(now) {
 }
 
 async function init() {
+    gameData = new GameData(global.round);
+    await gameData.init();
+    console.log('gameData : ', gameData);
+    console.log('gameData.mapHeight: ', gameData.mapHeight);
+    await gameData.setRound(5);
+    console.log('gameData : ', gameData);
+    console.log('gameData.mapHeight: ', gameData.mapHeight);
     console.log('Game initialysing...')
     // await initTiles()
     // await setAnimatedTiles()

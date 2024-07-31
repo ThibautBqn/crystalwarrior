@@ -9,6 +9,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './index.html'));
 })
 
+app.get('/getMaps/:round', (req, res) => {
+  console.log(req.params)
+  res.sendFile(path.join(__dirname, `./public/maps/carte${req.params.round}cw.json`));
+})
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
