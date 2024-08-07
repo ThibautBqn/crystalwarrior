@@ -177,7 +177,7 @@
           glob.fps = 0
         }
         if (glob.phase == 'fight') {
-          fight(glob.cursor.selected, glob.charactersPosition[glob.cursor.position.y + glob.background.position.y][glob.cursor.position.x + glob.background.position.x])
+          fight()
           return window.requestAnimationFrame(main)
         }
         if (glob.phase == 'tactical') {
@@ -199,16 +199,12 @@
         }
       }
 
-      async function fight(player, pc) {
-        const battle = new Battle();
-        document.getElementById("battle-layer").style.display = "block"
-        await battle.draw()
-        if (window.confirm("fin de la battle")) {
-            document.getElementById("battle-layer").style.display = "none"
-            console.log(document.getElementById("battle-layer").style.display)
-            glob.phase = "tactical"
+      async function fight() {
+        if (!glob.battle) {
+            glob.battle = new Battle(glob.cursor.selected, glob.charactersPosition[glob.cursor.position.y + glob.background.position.y][glob.cursor.position.x + glob.background.position.x]);
         }
-        
+        document.getElementById("battle-layer").style.display = "block"
+        await glob.battle.draw();
       }
     </script>
     </script>

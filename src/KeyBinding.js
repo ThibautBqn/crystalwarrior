@@ -2,12 +2,22 @@ function keyBinding() {
     document.onkeydown = function (e) {
       e = e || window.event;
       console.log(e.code, e.keyCode)
+      if("fight" === glob.phase) {
+        console.log(glob.battle)
+      }
       // console.log(glob.cursor.decall)
       if (e.code === 'ArrowLeft') 	{glob.mainController.move('left')}
       if (e.code === 'ArrowRight') 	{glob.mainController.move('right')}
       if (e.code === 'ArrowUp') 	{glob.mainController.move('up')}
       if (e.code === 'ArrowDown') 	{glob.mainController.move('down')}
       if (e.code === 'Space') {
+        if(glob.phase === "fight") {
+            document.getElementById("battle-layer").style.display = "none"
+            console.log(document.getElementById("battle-layer").style.display)
+            glob.phase = "tactical"
+            glob.battle = undefined
+            return
+        }
       	glob.mainController.select()
       	return
         if(glob.cursor.selected === undefined

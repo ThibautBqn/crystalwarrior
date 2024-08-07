@@ -103,9 +103,14 @@ class Cursor extends Drawable(Movable) {
     		character = this.getCharacter('pc')
 	    	console.log(character)
     		if (character) {
+                glob.battle = new Battle(this.selected, character);
                 character.setKnowledge(true)
     			console.log('GO FIGHT !')
                 glob.phase = "fight";
+                glob.charactersPosition[glob.cursor.selected.position.y][glob.cursor.selected.position.x] = glob.cursor.selected
+                this.selected.unselected()
+                this.selected = undefined
+                this.mode = null
     		}
     	}
     	if(this.selected && (!character || character.id === this.selected.id)) {
@@ -115,7 +120,7 @@ class Cursor extends Drawable(Movable) {
 	            // this.initPosition = {x: this.position.x, y: this.position.y}
 	            this.setAccessibleLocation()
 	            console.log('attack mode')
-	            return                
+                return
         	}
     		console.log('unselect')
     		glob.charactersPosition[glob.cursor.selected.initPosition.y][glob.cursor.selected.initPosition.x] = 0
