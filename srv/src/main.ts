@@ -2,92 +2,106 @@ console.log("refactorization to module import");
 
 console.log("trying import of testor module");
 
-import { Testor } from "./testor";
-import { Glob } from "./global";
-import { GameData } from "./gameData";
+// import { Testor } from "./testor";
+import { Global } from "./global";
+// import { GameData } from "./gameData";
+// import { Position } from "./interfaces";
+// import { Tile } from "./classes";
 
-enum Phase {
-    fight = "fight",
-    tactical = "tactical"
-}
-interface Global {
-    time: Date,
-    fps: number,
-    secondsPassed: number,
-    phase: Phase,
-    cursor: Cursor
-    charactersPosition: Character[],
-    background: Background
-}
-interface Position {
-    x: number,
-    y: number
-}
-interface Cursor {
-    position: Position,
-    selected: Character
-}
-interface Character {
-    position: Position
-}
-interface Background {
-    position: Position
-}
+// enum Phase {
+//     fight = "fight",
+//     tactical = "tactical"
+// }
+// interface Global {
+//     time: Date,
+//     fps: number,
+//     secondsPassed: number,
+//     phase: Phase,
+//     cursor: Cursor
+//     charactersPosition: Character[],
+//     background: Background
+// }
+// interface Cursor {
+//     position: Position,
+//     selected: Character
+// }
+// interface Character {
+//     position: Position
+// }
+// interface Background {
+//     position: Position
+// }
 
-const global = new Glob();
-global.init();
+const global = new Global();
 
-const glob: Global = {
-    time: new Date,
-    fps: 0,
-    secondsPassed: 0,
-    phase: Phase.tactical,
-    cursor: {
-        position: {
-            x: 0,
-            y:0
-        },
-        selected: undefined
-    },
-    charactersPosition: [],
-    background: {
-        position: {
-            x: 0,
-            y:0
-        }
-    }
-};
-let gameData: GameData;
+// const glob: Global = {
+//     time: new Date,
+//     fps: 0,
+//     secondsPassed: 0,
+//     phase: Phase.tactical,
+//     cursor: {
+//         position: {
+//             x: 0,
+//             y: 0
+//         },
+//         selected: undefined
+//     },
+//     charactersPosition: [],
+//     background: {
+//         position: {
+//             x: 0,
+//             y: 0
+//         }
+//     }
+// };
+// let gameData: GameData;
 
-function main(now) {
-    glob.time = now;
-    glob.fps++;
-    if (glob.fps == 60) {
-        glob.secondsPassed++
-        if (glob.secondsPassed % 5 === 0) {
+async function main(now: any) {
+    global.time = now;
+    global.fps++;
+    if (global.fps == 60) {
+        global.secondsPassed++
+        if (global.secondsPassed % 5 === 0) {
             console.log("Ho yeah !");
         }
-        glob.fps = 0;
+        global.fps = 0;
     }
-    if (glob.phase == 'fight') {
-        return window.requestAnimationFrame(main);
-    }
-    if (glob.phase == 'tactical') {
-        return window.requestAnimationFrame(main);
-    }
-    window.requestAnimationFrame(main);
+    await global.draw();
+    // if (global.phase == 'fight') {
+    //     return window.requestAnimationFrame(main);
+    // }
+    // if (global.phase == 'tactical') {
+    //     return window.requestAnimationFrame(main);
+    // }
+    return window.requestAnimationFrame(main);
 }
 
+// async function initTiles(gameData) {
+//     return new Promise((resolve, reject) => {
+//         let img = new Image();
+//         img.onload = function() {
+//             console.log(`initTiles() - img.onload() callback - gameData.tileset.tilecount: ${gameData.tileset.tilecount} - gameData.tileset.columns: ${gameData.tileset.columns}`);
+//             for (let y = 0 ; y < (gameData.tileset.tilecount / gameData.tileset.columns) ; y++) {
+//                 for (let x = 0 ; x < gameData.tileset.columns ; x++) {
+//                     global.tiles[x + y*gameData.tileset.columns] = new Tile(x + y*gameData.tileset.columns, img, gameData.tileset.columns)
+//                     if (y == (gameData.tileset.tilecount / gameData.tileset.columns) - 1 && x == gameData.tileset.columns - 1)
+//                         resolve(true);
+//                 }
+//             }
+//         }
+//         img.src = 'img/worldTiles.png';  
+//     })
+// }
+
 async function init() {
-    gameData = new GameData(global.round);
-    await gameData.init();
-    console.log('gameData : ', gameData);
-    console.log('gameData.mapHeight: ', gameData.mapHeight);
-    await gameData.setRound(5);
-    console.log('gameData : ', gameData);
-    console.log('gameData.mapHeight: ', gameData.mapHeight);
-    console.log('Game initialysing...')
-    // await initTiles()
+    await global.init();
+    // gameData = new GameData(global.round);
+    // await gameData.init();
+    // console.log('gameData : ', gameData);
+    // console.log('gameData.mapHeight: ', gameData.mapHeight);
+    // console.log('Game initialysing...')
+    // await initTiles(gameData);
+    // console.log(global.tiles);
     // await setAnimatedTiles()
     // glob.background.limit = {x: data.width - 9, y: data.height - 9}
     // glob.setMainController()
@@ -109,4 +123,4 @@ async function init() {
 
 init();
 
-console.log(Testor);
+// console.log(Testor);

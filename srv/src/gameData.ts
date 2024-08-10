@@ -1,7 +1,10 @@
 interface GameDataType {
     height: number,
     width: number,
-    characters: [[number]]
+    characters: [[number]],
+    tileset: any,
+    columns: number,
+    tilecount: number,
 }
 
 class GameData {
@@ -9,7 +12,7 @@ class GameData {
     
     public data: GameDataType;
 
-    constructor(round: number) {
+    constructor(round = 1) {
         this.round = round;
     }
 
@@ -38,6 +41,10 @@ class GameData {
 
     get characters(): [[number]] {
         return this.data.characters
+    }
+
+    get tileset(): any {
+        return this.data.tileset
     }
 }
 

@@ -195,7 +195,7 @@ class Cursor extends Drawable(Movable) {
         ctx.moveTo(this.position.x*glob.size + 2 * glob.ratio, this.position.y*glob.size + 25 * glob.ratio);
         ctx.lineTo(this.position.x*glob.size + 2 * glob.ratio, this.position.y*glob.size + 2 * glob.ratio);
         ctx.lineTo(this.position.x*glob.size + 25 * glob.ratio, this.position.y*glob.size + 2 * glob.ratio);
-        ctx.strokeStyle = 'rgb(255,0,255)';
+        ctx.strokeStyle = 'rgb(255,255,255)';
         ctx.stroke();
       }
       // ctx.strokeRect((this.position.x*glob.size)+2, (this.position.y*glob.size)+2, 61, 61);
