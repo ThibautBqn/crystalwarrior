@@ -9,8 +9,8 @@ class Cursor implements IDrawable {
     ratio = 1;
 
     constructor(height, width) {
-        this.mapHeight = height;
-        this.mapWidth = width;
+        this.mapHeight = height - 1;
+        this.mapWidth = width - 1;
         this.position = {x: 0, y: 0};
         document.onkeydown = (e) => {
             
@@ -20,6 +20,7 @@ class Cursor implements IDrawable {
             if (e.code === 'ArrowRight' && this.position.x < this.mapWidth) {this.position.x++}
             if (e.code === 'ArrowUp' && this.position.y > 0) {this.position.y--}
             if (e.code === 'ArrowDown' && this.position.y < this.mapHeight) {this.position.y++}
+            
             console.log(this.position);
         }
     }
@@ -29,18 +30,18 @@ class Cursor implements IDrawable {
         ctx.globalAlpha = 0.7
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(this.position.x*this.size + 38 * this.ratio, this.position.y*this.size + 2 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 62 * this.ratio, this.position.y*this.size + 2 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 62 * this.ratio, this.position.y*this.size + 25 * this.ratio);
-        ctx.moveTo(this.position.x*this.size + 62 * this.ratio, this.position.y*this.size + 38 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 62 * this.ratio, this.position.y*this.size + 62 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 38 * this.ratio, this.position.y*this.size + 62 * this.ratio);
-        ctx.moveTo(this.position.x*this.size + 25 * this.ratio, this.position.y*this.size + 62 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 2 * this.ratio, this.position.y*this.size + 62 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 2 * this.ratio, this.position.y*this.size + 38 * this.ratio);
-        ctx.moveTo(this.position.x*this.size + 2 * this.ratio, this.position.y*this.size + 25 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 2 * this.ratio, this.position.y*this.size + 2 * this.ratio);
-        ctx.lineTo(this.position.x*this.size + 25 * this.ratio, this.position.y*this.size + 2 * this.ratio);
+        ctx.moveTo(position.x * this.size + 38 * this.ratio, position.y * this.size + 2 * this.ratio);
+        ctx.lineTo(position.x * this.size + 62 * this.ratio, position.y * this.size + 2 * this.ratio);
+        ctx.lineTo(position.x * this.size + 62 * this.ratio, position.y * this.size + 25 * this.ratio);
+        ctx.moveTo(position.x * this.size + 62 * this.ratio, position.y * this.size + 38 * this.ratio);
+        ctx.lineTo(position.x * this.size + 62 * this.ratio, position.y * this.size + 62 * this.ratio);
+        ctx.lineTo(position.x * this.size + 38 * this.ratio, position.y * this.size + 62 * this.ratio);
+        ctx.moveTo(position.x * this.size + 25 * this.ratio, position.y * this.size + 62 * this.ratio);
+        ctx.lineTo(position.x * this.size + 2 * this.ratio, position.y * this.size + 62 * this.ratio);
+        ctx.lineTo(position.x * this.size + 2 * this.ratio, position.y * this.size + 38 * this.ratio);
+        ctx.moveTo(position.x * this.size + 2 * this.ratio, position.y * this.size + 25 * this.ratio);
+        ctx.lineTo(position.x * this.size + 2 * this.ratio, position.y * this.size + 2 * this.ratio);
+        ctx.lineTo(position.x * this.size + 25 * this.ratio, position.y * this.size + 2 * this.ratio);
         ctx.strokeStyle = 'rgb(255,255,255)';
         ctx.stroke();
     }

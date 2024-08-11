@@ -203,7 +203,7 @@
     "renderorder":"left-up",
     "tiledversion":"1.8.5",
     "tileheight":16,
-    "tilesets": {
+    "tileset": {
         "columns":25,
         "firstgid":1,
         "image":"sprites\/all2.png",

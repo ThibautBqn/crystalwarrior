@@ -6,7 +6,7 @@ class Global {
     time: Date;
     fps = 0;
     secondsPassed = 0;
-    round = 1;
+    round = 5;
     tiles: Array<Tile> = [];
     drawer = new Drawer();
     gameData = new GameData();
@@ -19,9 +19,9 @@ class Global {
     async init() {
         console.log(`Global - init() : called`)
         await this.gameData.init();
-        await this.drawer.init(this.gameData)
         await this.initTiles();
         await this.initAnimation();
+        await this.drawer.init(this.gameData, this.tiles);
         this.drawer.cursor = new Cursor(this.gameData.mapHeight, this.gameData.mapWidth);
     }
 
@@ -51,7 +51,7 @@ class Global {
     }
 
     async draw() {
-        this.drawer.doWhatYouWereCreatedToDo(this.tiles)
+        this.drawer.doWhatYouWereCreatedToDo();
     }
 }
 

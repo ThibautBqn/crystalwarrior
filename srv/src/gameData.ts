@@ -5,6 +5,7 @@ interface GameDataType {
     tileset: any,
     columns: number,
     tilecount: number,
+    layers: Array<any>;
 }
 
 class GameData {
@@ -12,7 +13,7 @@ class GameData {
     
     public data: GameDataType;
 
-    constructor(round = 1) {
+    constructor(round = 5) {
         this.round = round;
     }
 

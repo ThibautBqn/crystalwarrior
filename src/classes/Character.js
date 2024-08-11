@@ -1,25 +1,25 @@
 class Character extends Drawable(Movable) {
     constructor(id, position, test) {
-		super()
-		this.id = id
-		this.position = position
-		this.tileid = characters[id - 1].tileid
-		this.mainTileId = characters[id - 1].tileid
-		this.owner = characters[id - 1].owner
-		this.type = characters[id - 1].type
-		this.accessibleLocation = []
-		this.mouvementLeft = 5
-		this.mouvement = 5
-		this.moved = false
-		this.know = false
-		this.initPosition = {x: this.position.x, y: this.position.y}
-		for(let name in test) {
-			if (this[name] === undefined) {
-				this[name] = test[name]
-			}
-			console.log(name, this[name], test[name])
-			// this[name] = this[name] === undefined ? test[name] : undefined
-		}
+      super()
+      this.id = id
+      this.position = position
+      this.tileid = characters[id - 1].tileid
+      this.mainTileId = characters[id - 1].tileid
+      this.owner = characters[id - 1].owner
+      this.type = characters[id - 1].type
+      this.accessibleLocation = []
+      this.mouvementLeft = 5
+      this.mouvement = 5
+      this.moved = false
+      this.know = false
+      this.initPosition = {x: this.position.x, y: this.position.y}
+      for(let name in test) {
+        if (this[name] === undefined) {
+          this[name] = test[name]
+        }
+        console.log(name, this[name], test[name])
+        // this[name] = this[name] === undefined ? test[name] : undefined
+      }
     }
 
     setKnowledge(know) {
